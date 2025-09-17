@@ -32,8 +32,7 @@ export class GoogleAuthAPI implements IAuthAPI {
 		const tokenResponse =
 			await new Promise<google.accounts.oauth2.TokenResponse>((resolve) => {
 				const tokenClient = google.accounts.oauth2.initTokenClient({
-					client_id:
-						"1028248986339-5tvr5e00e160ckqj5vuka7dokr3ipjol.apps.googleusercontent.com",
+					client_id: import.meta.env.GOOGLE_CLIENT_ID,
 					scope:
 						"https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile",
 					prompt: "consent",

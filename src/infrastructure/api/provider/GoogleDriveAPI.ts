@@ -5,22 +5,35 @@ import type {
 } from "@/infrastructure/api/provider/IProviderAPI";
 import { getFixedSizeChunk } from "@/infrastructure/utils/stream";
 
+interface PickerResponseObject {
+	action: string;
+	docs?: Array<{
+		id: string;
+		name?: string;
+		[key: string]: unknown;
+	}>;
+}
+
+interface GooglePickerBuilder {
+	setOAuthToken(token: string): GooglePickerBuilder;
+	setAppId(appId: string): GooglePickerBuilder;
+	addView(view: GoogleDocsView): GooglePickerBuilder;
+	setCallback(callback: (data: PickerResponseObject) => void): GooglePickerBuilder;
+	enableFeature(feature: string): GooglePickerBuilder;
+	setTitle(title: string): GooglePickerBuilder;
+	build(): { setVisible(visible: boolean): void };
+}
+
+interface GoogleDocsView {
+	setIncludeFolders(include: boolean): GoogleDocsView;
+	setSelectFolderEnabled(enabled: boolean): GoogleDocsView;
+	setMimeTypes(mimeTypes: string): GoogleDocsView;
+}
+
 interface GooglePickerAPI {
 	picker: {
-		PickerBuilder: new () => {
-			setOAuthToken(token: string): any;
-			setAppId(appId: string): any;
-			addView(view: any): any;
-			setCallback(callback: (data: any) => void): any;
-			enableFeature(feature: any): any;
-			setTitle(title: string): any;
-			build(): { setVisible(visible: boolean): void };
-		};
-		DocsView: new (viewId: string) => {
-			setIncludeFolders(include: boolean): any;
-			setSelectFolderEnabled(enabled: boolean): any;
-			setMimeTypes(mimeTypes: string): any;
-		};
+		PickerBuilder: new () => GooglePickerBuilder;
+		DocsView: new (viewId: string) => GoogleDocsView;
 		ViewId: {
 			FOLDERS: string;
 		};
@@ -35,6 +48,7 @@ declare global {
 		google: GooglePickerAPI;
 	}
 }
+
 
 const RESPONSE_CODES = {
 	resumeIncomplete: 308,
@@ -248,7 +262,7 @@ export class GoogleDriveAPI implements IProviderAPI {
 		account: AccountDTO,
 		resolve: (path: string[] | null) => void
 	): void {
-		const appId = '1028248986339';
+		const appId = import.meta.env.GOOGLE_APP_ID;
 
 		const picker = new window.google.picker.PickerBuilder()
 			.setOAuthToken(account.oauthData!.accessToken)
@@ -257,7 +271,7 @@ export class GoogleDriveAPI implements IProviderAPI {
 				.setIncludeFolders(true)
 				.setSelectFolderEnabled(true)
 				.setMimeTypes('application/vnd.google-apps.folder'))
-			.setCallback((data: any) => {
+			.setCallback((data: PickerResponseObject) => {
 				if (data.action === 'picked' && data.docs && data.docs.length > 0) {
 					const selectedFolder = data.docs[0];
 					this.getFolderPath(selectedFolder.id, account).then(resolve);
