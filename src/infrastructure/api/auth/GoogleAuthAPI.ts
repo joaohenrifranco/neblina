@@ -29,11 +29,15 @@ export class GoogleAuthAPI implements IAuthAPI {
 	}
 
 	async authenticate(): Promise<OAuthDTO> {
+		const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+		if (!clientId) {
+			throw new Error("VITE_GOOGLE_CLIENT_ID environment variable is not set");
+		}
+
 		const tokenResponse =
 			await new Promise<google.accounts.oauth2.TokenResponse>((resolve) => {
 				const tokenClient = google.accounts.oauth2.initTokenClient({
-					client_id:
-						"1028248986339-5tvr5e00e160ckqj5vuka7dokr3ipjol.apps.googleusercontent.com",
+					client_id: clientId,
 					scope:
 						"https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile",
 					prompt: "consent",
