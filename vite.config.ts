@@ -6,7 +6,7 @@ import VueDevTools from "vite-plugin-vue-devtools";
 
 export default defineConfig({
 	plugins: [vue(), VueDevTools()],
-	base: process.env.NODE_ENV === 'production' ? '/neblina/' : '/',
+	base: '/',
 	resolve: {
 		alias: {
 			"@": fileURLToPath(new URL("./src", import.meta.url)),
