@@ -52,34 +52,6 @@ No setup required! Uses our public Google Cloud app for OAuth authentication. Yo
 2. **Add your Google Drive account**
 3. **Create a vault** with that password and the same folder path as your existing crypt remote
 
-## 🔧 How It Works
-
-```mermaid
-sequenceDiagram
-   participant U as User
-   participant W as WebApp
-   participant G as Google Drive
-
-   U->>W: Input password
-   Note right of W: Password saved in memory for session
-
-   U->>W: Upload file
-   W->>W: Encrypt file + filename locally
-   W->>G: Upload encrypted data
-
-   U->>W: Browse files
-   W->>G: Fetch encrypted filenames
-   G-->>W: Return encrypted data
-   W->>W: Decrypt filenames locally
-   W-->>U: Display plain text names
-
-   U->>W: Download file
-   W->>G: Fetch encrypted file
-   G-->>W: Return encrypted data
-   W->>W: Decrypt file locally
-   W-->>U: Provide decrypted file
-```
-
 ## 🗺️ Roadmap
 
 - [ ] Support for rclone's password2 (custom salt)
