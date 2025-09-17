@@ -10,7 +10,7 @@ import type { AccountRepository } from "@/infrastructure/repositories/AccountRep
 export class AccountService {
 	constructor(
 		private readonly accountRepository: AccountRepository,
-		private readonly providerAPIs: Map<ProviderId, IProviderAPI>
+		private readonly providerAPIs: Map<ProviderId, IProviderAPI>,
 	) {}
 
 	async listAccounts(): Promise<AccountDTO[]> {

@@ -6,7 +6,7 @@ import VueDevTools from "vite-plugin-vue-devtools";
 
 export default defineConfig({
 	plugins: [vue(), VueDevTools()],
-	base: '/',
+	base: "/",
 	resolve: {
 		alias: {
 			"@": fileURLToPath(new URL("./src", import.meta.url)),
@@ -14,9 +14,7 @@ export default defineConfig({
 		extensions: [".ts", ".vue", ".js", ".mjs", ".json"],
 	},
 	server: {
-		headers: {
-
-		},
+		headers: {},
 	},
 	optimizeDeps: {
 		exclude: ["@/infrastructure/services/RcloneWasmWorker.ts"],

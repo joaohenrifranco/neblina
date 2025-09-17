@@ -18,7 +18,9 @@ interface GooglePickerBuilder {
 	setOAuthToken(token: string): GooglePickerBuilder;
 	setAppId(appId: string): GooglePickerBuilder;
 	addView(view: GoogleDocsView): GooglePickerBuilder;
-	setCallback(callback: (data: PickerResponseObject) => void): GooglePickerBuilder;
+	setCallback(
+		callback: (data: PickerResponseObject) => void,
+	): GooglePickerBuilder;
 	enableFeature(feature: string): GooglePickerBuilder;
 	setTitle(title: string): GooglePickerBuilder;
 	build(): { setVisible(visible: boolean): void };
@@ -48,7 +50,6 @@ declare global {
 		google: GooglePickerAPI;
 	}
 }
-
 
 const RESPONSE_CODES = {
 	resumeIncomplete: 308,
@@ -251,7 +252,7 @@ export class GoogleDriveAPI implements IProviderAPI {
 			if (window.google?.picker) {
 				this.createFolderPicker(account, resolve);
 			} else {
-				gapi.load('picker', {
+				gapi.load("picker", {
 					callback: () => this.createFolderPicker(account, resolve),
 				});
 			}
@@ -260,46 +261,51 @@ export class GoogleDriveAPI implements IProviderAPI {
 
 	private createFolderPicker(
 		account: AccountDTO,
-		resolve: (path: string[] | null) => void
+		resolve: (path: string[] | null) => void,
 	): void {
 		const appId = import.meta.env.GOOGLE_APP_ID;
 
 		const picker = new window.google.picker.PickerBuilder()
 			.setOAuthToken(account.oauthData!.accessToken)
 			.setAppId(appId)
-			.addView(new window.google.picker.DocsView(window.google.picker.ViewId.FOLDERS)
-				.setIncludeFolders(true)
-				.setSelectFolderEnabled(true)
-				.setMimeTypes('application/vnd.google-apps.folder'))
+			.addView(
+				new window.google.picker.DocsView(window.google.picker.ViewId.FOLDERS)
+					.setIncludeFolders(true)
+					.setSelectFolderEnabled(true)
+					.setMimeTypes("application/vnd.google-apps.folder"),
+			)
 			.setCallback((data: PickerResponseObject) => {
-				if (data.action === 'picked' && data.docs && data.docs.length > 0) {
+				if (data.action === "picked" && data.docs && data.docs.length > 0) {
 					const selectedFolder = data.docs[0];
 					this.getFolderPath(selectedFolder.id, account).then(resolve);
-				} else if (data.action === 'cancel') {
+				} else if (data.action === "cancel") {
 					resolve(null);
 				}
 			})
 			.enableFeature(window.google.picker.Feature.NAV_HIDDEN)
-			.setTitle('Select Vault Folder')
+			.setTitle("Select Vault Folder")
 			.build();
 
 		picker.setVisible(true);
 	}
 
-	private async getFolderPath(folderId: string, account: AccountDTO): Promise<string[]> {
-		if (folderId === 'root') {
+	private async getFolderPath(
+		folderId: string,
+		account: AccountDTO,
+	): Promise<string[]> {
+		if (folderId === "root") {
 			return [];
 		}
 
 		const response = await gapi.client.drive.files.get({
 			fileId: folderId,
-			fields: 'name,parents',
+			fields: "name,parents",
 			access_token: account.oauthData?.accessToken,
 		});
 
 		const folder = response.result;
 		if (!folder.name) {
-			throw new Error('Unable to get folder name');
+			throw new Error("Unable to get folder name");
 		}
 
 		const path = [folder.name];

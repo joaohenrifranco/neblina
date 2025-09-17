@@ -89,7 +89,6 @@ interface Emits {
 const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
 
-
 const form = ref({
 	name: "",
 	mountPath: "",
