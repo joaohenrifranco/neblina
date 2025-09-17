@@ -8,6 +8,11 @@ const router = createRouter({
 			name: "explorer",
 			component: () => import("@/presentation/views/ExplorerView.vue"),
 		},
+		{
+			path: "/privacy",
+			name: "privacy",
+			redirect: "/PRIVACY.md",
+		},
 	],
 });
 
