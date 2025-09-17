@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import {
-	CloudFog,
 	File,
 	Folder,
 	Github,
