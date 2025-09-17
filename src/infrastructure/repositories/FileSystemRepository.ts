@@ -203,4 +203,5 @@ export class FileRepository {
 		const fullPath = [...vault.mountPath, ...encryptedPath];
 		return fullPath;
 	}
+
 }

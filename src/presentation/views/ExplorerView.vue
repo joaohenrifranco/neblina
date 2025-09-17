@@ -270,6 +270,6 @@ const openGitHub = () => {
 
   <VaultSettingsDialog v-if="controller.editingVault.value" :open="!!controller.editingVault.value"
     @update:open="val => val ? null : controller.setEditingVault(null)" @save="controller.saveVault"
-    @delete="controller.deleteVault" :vault="controller.editingVault.value" :loading="controller.isLoading.value" />
+    @delete="controller.deleteVault" @openFolderPicker="controller.openFolderPicker" :vault="controller.editingVault.value" :loading="controller.isLoading.value" />
 </div>
 </template>

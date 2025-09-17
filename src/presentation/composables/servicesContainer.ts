@@ -34,7 +34,7 @@ export class ServicesContainer {
 		);
 		const fileRepository = new FileRepository(encryptionService, providerAPIs);
 
-		this.accountService = new AccountService(accountRepository);
+		this.accountService = new AccountService(accountRepository, providerAPIs);
 		this.filesService = new FileSystemService(
 			fileRepository,
 			accountRepository,

@@ -435,6 +435,15 @@ class AppController {
 		}
 	};
 
+	openFolderPicker = async (accountId: string): Promise<string[] | null> => {
+		try {
+			return await this.svcs.accountService.openFolderPicker(accountId);
+		} catch (error) {
+			console.error("Failed to open folder picker:", error);
+			throw error;
+		}
+	};
+
 	initialize = async () => {
 		await this.svcs.init();
 		this.svcs.taskQueueService.addEventListener(this.handleTaskEvent);

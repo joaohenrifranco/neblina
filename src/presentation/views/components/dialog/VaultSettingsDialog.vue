@@ -15,7 +15,22 @@
 			</div>
 			<div>
 				<label class="text-sm font-medium">Vault Folder</label>
-				<Input v-model="form.mountPath" placeholder="path/to/folder" class="mt-1" />
+				<div class="mt-1 flex items-center space-x-2">
+					<Input
+						v-model="form.mountPath"
+						placeholder="path/to/folder"
+						readonly
+						class="flex-1 bg-muted/50"
+					/>
+					<Button
+						variant="outline"
+						size="sm"
+						@click="openFolderPicker"
+						:disabled="loading"
+					>
+						<FolderSearch class="w-4 h-4" />
+					</Button>
+				</div>
 			</div>
 			<div>
 				<label class="text-sm font-medium">Encryption Password</label>
@@ -44,7 +59,7 @@
 </template>
 
 <script setup lang="ts">
-import { Trash2 } from "lucide-vue-next";
+import { FolderSearch, Trash2 } from "lucide-vue-next";
 import { computed, ref, watch } from "vue";
 import type { VaultDTO } from "@/domain/entities/Vault";
 import { Button } from "@/presentation/ui/button";
@@ -68,10 +83,12 @@ interface Emits {
 	(e: "update:open", value: boolean): void;
 	(e: "save", vault: Partial<VaultDTO>): void;
 	(e: "delete", vaultId: string): void;
+	(e: "openFolderPicker", accountId: string): Promise<string[] | null>;
 }
 
 const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
+
 
 const form = ref({
 	name: "",
@@ -134,6 +151,17 @@ const handleSave = () => {
 const handleDelete = () => {
 	if (props.vault?.id) {
 		emit("delete", props.vault.id);
+	}
+};
+
+const openFolderPicker = async () => {
+	try {
+		const selectedPath = await emit("openFolderPicker", props.vault.accountId);
+		if (selectedPath) {
+			form.value.mountPath = selectedPath.join("/");
+		}
+	} catch (error) {
+		console.error("Failed to open folder picker:", error);
 	}
 };
 </script>
