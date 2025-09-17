@@ -1,0 +1,14 @@
+{
+	"extends": "@vue/tsconfig/tsconfig.dom.json",
+	"include": ["env.d.ts", "src/**/*", "*.ts"],
+	"exclude": ["src/**/__tests__/*", "node_modules", "vite.config.ts"],
+	"compilerOptions": {
+		"strict": true,
+		"composite": true,
+		"types": ["gapi.client.drive-v3", "google.accounts", "gapi"],
+		"baseUrl": ".",
+		"paths": {
+			"@/*": ["./src/*"]
+		}
+	}
+}

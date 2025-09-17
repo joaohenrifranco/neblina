@@ -1,0 +1,6 @@
+{
+	"entry": ["src/main.ts", "index.html"],
+	"project": ["src/**/*.{ts,vue,js}"],
+	"ignore": ["dist/**/*", "node_modules/**/*"],
+	"ignoreDependencies": []
+}
