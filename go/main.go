@@ -35,22 +35,21 @@ func createCipher(this js.Value, args []js.Value) interface{} {
 
 	password := args[0].String()
 	salt := args[1].String()
-
 	obscuredPassword := obscure.MustObscure(password)
 
 	configData := map[string]string{
-		"password":                  obscuredPassword,
-		"filename_encryption":       "standard",
-		"filename_encoding":         "base32",
-		"suffix":                    ".bin",
+		"password":            obscuredPassword,
+		"filename_encryption": "standard",
+		"filename_encoding":   "base32",
+		"suffix":              ".bin",
 	}
+
 	if salt != "" {
 		obscuredSalt := obscure.MustObscure(salt)
 		configData["password2"] = obscuredSalt
 	}
 
 	configMap := configmap.Simple(configData)
-
 	filenameEnc, _ := configMap.Get("filename_encryption")
 	fmt.Printf("Creating cipher with config: filename_encryption=%s, password_set=%t, salt_set=%t\n",
 		filenameEnc, password != "", salt != "")
@@ -167,10 +166,8 @@ func encryptStream(this js.Value, args []js.Value) interface{} {
 
 	stream := args[0]
 
-	// Create a ReadableStream wrapper that reads from JS stream
 	streamReader := &jsStreamReader{stream: stream}
-	
-	// Pipe directly to rclone encryption
+
 	encryptedReader, err := globalCipher.EncryptData(streamReader)
 	if err != nil {
 		return map[string]interface{}{
@@ -178,7 +175,6 @@ func encryptStream(this js.Value, args []js.Value) interface{} {
 		}
 	}
 
-	// Return encrypted ReadableStream
 	return map[string]interface{}{
 		"result": createJSReadableStream(encryptedReader),
 	}
@@ -198,31 +194,119 @@ func decryptStream(this js.Value, args []js.Value) interface{} {
 	}
 
 	stream := args[0]
+	reader := stream.Call("getReader")
+	var encryptedData []byte
 
-	// Create a ReadableStream wrapper that reads from JS stream
-	streamReader := &jsStreamReader{stream: stream}
-	
-	// Pipe directly to rclone decryption
-	decryptedReader, err := globalCipher.DecryptData(streamReader)
+	return map[string]interface{}{
+		"result": createDecryptedStream(reader, &encryptedData),
+	}
+}
+
+func createDecryptedStream(reader js.Value, encryptedData *[]byte) js.Value {
+	return js.Global().Get("ReadableStream").New(map[string]interface{}{
+		"start": js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+			controller := args[0]
+			readAll := createReadAllFunc(reader, encryptedData, controller)
+			readAll.Invoke()
+			return nil
+		}),
+	})
+}
+
+func createReadAllFunc(reader js.Value, encryptedData *[]byte, controller js.Value) js.Func {
+	var readAll js.Func
+	readAll = js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+		promise := reader.Call("read")
+
+		promise.Call("then", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+			result := args[0]
+
+			if result.Get("done").Bool() {
+				processCompleteData(*encryptedData, controller, reader, readAll)
+				return nil
+			}
+
+			value := result.Get("value")
+			length := value.Get("length").Int()
+			chunk := make([]byte, length)
+			js.CopyBytesToGo(chunk, value)
+			*encryptedData = append(*encryptedData, chunk...)
+
+			readAll.Invoke()
+			return nil
+		})).Call("catch", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+			controller.Call("error", args[0])
+			reader.Call("releaseLock")
+			readAll.Release()
+			return nil
+		}))
+
+		return nil
+	})
+	return readAll
+}
+
+func processCompleteData(encryptedData []byte, controller, reader js.Value, readAll js.Func) {
+	if len(encryptedData) == 0 {
+		controller.Call("close")
+		reader.Call("releaseLock")
+		readAll.Release()
+		return
+	}
+
+	encryptedReader := stringReadCloser{strings.NewReader(string(encryptedData))}
+	decryptedReader, err := globalCipher.DecryptData(encryptedReader)
 	if err != nil {
-		return map[string]interface{}{
-			"error": fmt.Sprintf("Failed to decrypt stream: %v", err),
+		controller.Call("error", js.ValueOf(err.Error()))
+		reader.Call("releaseLock")
+		readAll.Release()
+		return
+	}
+
+	go streamDecryptedData(decryptedReader, controller, reader, readAll)
+}
+
+func streamDecryptedData(decryptedReader io.ReadCloser, controller, reader js.Value, readAll js.Func) {
+	defer func() {
+		decryptedReader.Close()
+		reader.Call("releaseLock")
+		readAll.Release()
+	}()
+
+	buffer := make([]byte, 65536)
+	for {
+		n, err := decryptedReader.Read(buffer)
+		if n > 0 {
+			chunk := js.Global().Get("Uint8Array").New(n)
+			js.CopyBytesToJS(chunk, buffer[:n])
+			controller.Call("enqueue", chunk)
+		}
+		if err == io.EOF {
+			controller.Call("close")
+			break
+		}
+		if err != nil {
+			controller.Call("error", js.ValueOf(err.Error()))
+			break
 		}
 	}
-
-	// Return decrypted ReadableStream
-	return map[string]interface{}{
-		"result": createJSReadableStream(decryptedReader),
-	}
 }
 
-// jsStreamReader implements io.ReadCloser for JavaScript ReadableStream
 type jsStreamReader struct {
-	stream js.Value
-	reader js.Value
-	buffer []byte
-	done   bool
+	stream     js.Value
+	reader     js.Value
+	buffer     []byte
+	done       bool
+	pendingRead bool
+	readChan   chan readResult
 }
+
+type readResult struct {
+	data []byte
+	done bool
+	err  error
+}
+
 
 func (r *jsStreamReader) Read(p []byte) (n int, err error) {
 	if r.done {
@@ -231,28 +315,83 @@ func (r *jsStreamReader) Read(p []byte) (n int, err error) {
 	
 	if r.reader.IsUndefined() {
 		r.reader = r.stream.Call("getReader")
+		r.readChan = make(chan readResult, 10)
+		r.startReading()
 	}
 	
 	if len(r.buffer) == 0 {
-				promise := r.reader.Call("read")
-		
-		result := await(promise)
-		r.done = result.Get("done").Bool()
-		
-		if r.done {
-			return 0, io.EOF
+		select {
+		case result := <-r.readChan:
+			if result.err != nil {
+				return 0, result.err
+			}
+			r.done = result.done
+			if r.done {
+				return 0, io.EOF
+			}
+			r.buffer = result.data
+			if !r.pendingRead && !r.done {
+				r.startReading()
+			}
+		default:
+			if !r.pendingRead {
+				r.startReading()
+			}
+			result := <-r.readChan
+			if result.err != nil {
+				return 0, result.err
+			}
+			r.done = result.done
+			if r.done {
+				return 0, io.EOF
+			}
+			r.buffer = result.data
 		}
-		
-		value := result.Get("value")
-		length := value.Get("length").Int()
-		r.buffer = make([]byte, length)
-		js.CopyBytesToGo(r.buffer, value)
 	}
 	
 	n = copy(p, r.buffer)
 	r.buffer = r.buffer[n:]
 	
 	return n, nil
+}
+
+func (r *jsStreamReader) startReading() {
+	if r.pendingRead {
+		return
+	}
+	r.pendingRead = true
+
+	promise := r.reader.Call("read")
+
+	promise.Call("then", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+		defer func() { r.pendingRead = false }()
+		result := args[0]
+		done := result.Get("done").Bool()
+
+		if done {
+			select {
+			case r.readChan <- readResult{done: true}:
+			default:
+			}
+		} else {
+			value := result.Get("value")
+			length := value.Get("length").Int()
+			data := make([]byte, length)
+			js.CopyBytesToGo(data, value)
+			select {
+			case r.readChan <- readResult{data: data, done: false}:
+			default:
+			}
+		}
+		return nil
+	})).Call("catch", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+		defer func() { r.pendingRead = false }()
+		select {
+		case r.readChan <- readResult{err: fmt.Errorf("stream read error")}:
+		default:
+		}
+		return nil
+	}))
 }
 
 func (r *jsStreamReader) Close() error {
@@ -262,21 +401,6 @@ func (r *jsStreamReader) Close() error {
 	return nil
 }
 
-func await(promise js.Value) js.Value {
-	done := make(chan js.Value, 1)
-	
-	promise.Call("then", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-		done <- args[0]
-		return nil
-	})).Call("catch", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-		done <- js.Null()
-		return nil
-	}))
-	
-	return <-done
-}
-
-// Create JavaScript ReadableStream from Go io.Reader
 func createJSReadableStream(reader io.Reader) js.Value {
 	return js.Global().Get("ReadableStream").New(map[string]interface{}{
 		"start": js.FuncOf(func(this js.Value, args []js.Value) interface{} {
