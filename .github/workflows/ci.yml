@@ -38,3 +38,6 @@ jobs:
 
     - name: Build project
       run: npm run build
+      env:
+        GOOGLE_APP_ID: ${{ secrets.GOOGLE_APP_ID }}
+        GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
