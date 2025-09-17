@@ -4,7 +4,7 @@
    height="275"
    version="1.1"
    id="svg1"
-   sodipodi:docname="untitled.svg"
+   sodipodi:docname="untitled-bg.svg"
    inkscape:version="1.4.2 (ebf0e940, 2025-05-08)"
    inkscape:export-filename="untitled.png"
    inkscape:export-xdpi="41.890907"
@@ -25,8 +25,8 @@
      inkscape:pagecheckerboard="1"
      inkscape:deskcolor="#505050"
      inkscape:zoom="2.6132627"
-     inkscape:cx="87.055925"
-     inkscape:cy="124.36561"
+     inkscape:cx="160.90996"
+     inkscape:cy="141.2028"
      inkscape:window-width="1576"
      inkscape:window-height="1027"
      inkscape:window-x="1644"
@@ -34,6 +34,14 @@
      inkscape:window-maximized="0"
      inkscape:current-layer="svg1"
      inkscape:clip-to-page="true" />
+  <rect
+     style="fill:#3f003f;fill-opacity:1;stroke-width:9.87629;stroke-dasharray:none"
+     id="rect3"
+     width="275.13498"
+     height="274.75232"
+     x="0"
+     y="0"
+     rx="9.8899584" />
   <g
      id="g3"
      transform="matrix(1.1957521,0,0,1.149551,-34.844184,-28.324617)">

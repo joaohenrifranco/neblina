@@ -45,7 +45,7 @@ const openGitHub = () => {
   <div
     class="h-12 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex items-center justify-between px-4">
     <div class="flex items-center gap-2">
-      <CloudFog class="w-5 h-5 text-primary" />
+      <img src="/logo.svg" alt="Neblina Logo" class="w-6 h-6" />
       <h1 class="text-lg font-semibold">Neblina</h1>
     </div>
     <div class="flex items-center">
