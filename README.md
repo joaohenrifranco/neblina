@@ -35,17 +35,22 @@ No setup required! Uses our public Google Cloud app for OAuth authentication. Yo
 
 
 ## 📖 Usage
+> ⚠️ **Important**: Google will show an "unverified app" warning because Neblina is an open source project without resources for verification process. This is normal and safe to proceed with.
 
 ### For New Users
 
-1. **Authenticate** with Google Drive using OAuth
-2. **Create a Vault**: choose a strong password and a vault root folder within your cloud storage
-4. **Start uploading** - files are automatically encrypted before reaching Google Drive
+1. **Add Account**: Click "Add Account" and authenticate with Google Drive
+2. **Create a Vault**:
+   - Choose a descriptive vault name
+   - Click "Choose Vault Folder" to select an **empty** folder in your Google Drive
+   - Set a strong encryption password
+3. **Start uploading** - files are automatically encrypted before reaching Google Drive
 
 ### For Existing rclone Users
 
 1. **Find your password**: `rclone obscure --reveal your-obscured-password`
-3. **Create a vault** with that password and the same location as your crypt remote
+2. **Add your Google Drive account**
+3. **Create a vault** with that password and the same folder path as your existing crypt remote
 
 ## 🔧 How It Works
 
