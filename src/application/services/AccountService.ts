@@ -4,10 +4,14 @@ import {
 	type ProviderId,
 } from "@/domain/entities/Account";
 import type { CreateVaultDTO, VaultDTO } from "@/domain/entities/Vault";
+import type { IProviderAPI } from "@/infrastructure/api/provider/IProviderAPI";
 import type { AccountRepository } from "@/infrastructure/repositories/AccountRepository";
 
 export class AccountService {
-	constructor(private readonly accountRepository: AccountRepository) {}
+	constructor(
+		private readonly accountRepository: AccountRepository,
+		private readonly providerAPIs: Map<ProviderId, IProviderAPI>,
+	) {}
 
 	async listAccounts(): Promise<AccountDTO[]> {
 		const accounts = await this.accountRepository.getAll();
@@ -111,5 +115,21 @@ export class AccountService {
 		}
 
 		await this.accountRepository.save(account);
+	}
+
+	async openFolderPicker(accountId: string): Promise<string[] | null> {
+		const account = await this.accountRepository.getById(accountId);
+		if (!account) {
+			throw new Error("Account not found");
+		}
+
+		const providerAPI = this.providerAPIs.get(account.providerId);
+		if (!providerAPI) {
+			throw new Error(
+				`No provider API registered for type: ${account.providerId}`,
+			);
+		}
+
+		return await providerAPI.openFolderPicker(account.toDto());
 	}
 }

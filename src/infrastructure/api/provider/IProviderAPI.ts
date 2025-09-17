@@ -32,4 +32,5 @@ export type IProviderAPI = {
 		account: AccountDTO,
 		createMissing?: boolean,
 	): Promise<string | null>;
+	openFolderPicker(account: AccountDTO): Promise<string[] | null>;
 };

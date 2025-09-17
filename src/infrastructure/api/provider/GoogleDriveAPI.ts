@@ -5,6 +5,52 @@ import type {
 } from "@/infrastructure/api/provider/IProviderAPI";
 import { getFixedSizeChunk } from "@/infrastructure/utils/stream";
 
+interface PickerResponseObject {
+	action: string;
+	docs?: Array<{
+		id: string;
+		name?: string;
+		[key: string]: unknown;
+	}>;
+}
+
+interface GooglePickerBuilder {
+	setOAuthToken(token: string): GooglePickerBuilder;
+	setAppId(appId: string): GooglePickerBuilder;
+	addView(view: GoogleDocsView): GooglePickerBuilder;
+	setCallback(
+		callback: (data: PickerResponseObject) => void,
+	): GooglePickerBuilder;
+	enableFeature(feature: string): GooglePickerBuilder;
+	setTitle(title: string): GooglePickerBuilder;
+	build(): { setVisible(visible: boolean): void };
+}
+
+interface GoogleDocsView {
+	setIncludeFolders(include: boolean): GoogleDocsView;
+	setSelectFolderEnabled(enabled: boolean): GoogleDocsView;
+	setMimeTypes(mimeTypes: string): GoogleDocsView;
+}
+
+interface GooglePickerAPI {
+	picker: {
+		PickerBuilder: new () => GooglePickerBuilder;
+		DocsView: new (viewId: string) => GoogleDocsView;
+		ViewId: {
+			FOLDERS: string;
+		};
+		Feature: {
+			NAV_HIDDEN: string;
+		};
+	};
+}
+
+declare global {
+	interface Window {
+		google: GooglePickerAPI;
+	}
+}
+
 const RESPONSE_CODES = {
 	resumeIncomplete: 308,
 	ok: 200,
@@ -195,6 +241,81 @@ export class GoogleDriveAPI implements IProviderAPI {
 				}),
 			),
 		);
+	}
+
+	async openFolderPicker(account: AccountDTO): Promise<string[] | null> {
+		return new Promise((resolve) => {
+			if (!account.oauthData?.accessToken) {
+				throw new Error("Account is not authenticated");
+			}
+
+			if (window.google?.picker) {
+				this.createFolderPicker(account, resolve);
+			} else {
+				gapi.load("picker", {
+					callback: () => this.createFolderPicker(account, resolve),
+				});
+			}
+		});
+	}
+
+	private createFolderPicker(
+		account: AccountDTO,
+		resolve: (path: string[] | null) => void,
+	): void {
+		const appId = import.meta.env.GOOGLE_APP_ID;
+
+		const picker = new window.google.picker.PickerBuilder()
+			.setOAuthToken(account.oauthData!.accessToken)
+			.setAppId(appId)
+			.addView(
+				new window.google.picker.DocsView(window.google.picker.ViewId.FOLDERS)
+					.setIncludeFolders(true)
+					.setSelectFolderEnabled(true)
+					.setMimeTypes("application/vnd.google-apps.folder"),
+			)
+			.setCallback((data: PickerResponseObject) => {
+				if (data.action === "picked" && data.docs && data.docs.length > 0) {
+					const selectedFolder = data.docs[0];
+					this.getFolderPath(selectedFolder.id, account).then(resolve);
+				} else if (data.action === "cancel") {
+					resolve(null);
+				}
+			})
+			.enableFeature(window.google.picker.Feature.NAV_HIDDEN)
+			.setTitle("Select Vault Folder")
+			.build();
+
+		picker.setVisible(true);
+	}
+
+	private async getFolderPath(
+		folderId: string,
+		account: AccountDTO,
+	): Promise<string[]> {
+		if (folderId === "root") {
+			return [];
+		}
+
+		const response = await gapi.client.drive.files.get({
+			fileId: folderId,
+			fields: "name,parents",
+			access_token: account.oauthData?.accessToken,
+		});
+
+		const folder = response.result;
+		if (!folder.name) {
+			throw new Error("Unable to get folder name");
+		}
+
+		const path = [folder.name];
+
+		if (folder.parents && folder.parents.length > 0) {
+			const parentPath = await this.getFolderPath(folder.parents[0], account);
+			return [...parentPath, ...path];
+		}
+
+		return path;
 	}
 
 	private async uploadStream(

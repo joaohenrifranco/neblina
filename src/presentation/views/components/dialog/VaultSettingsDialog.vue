@@ -11,11 +11,47 @@
 		<div class="space-y-4">
 			<div>
 				<label class="text-sm font-medium">Vault Name</label>
-				<Input v-model="form.name" placeholder="my-encrypted-vault" class="mt-1" />
+				<Input v-model="form.name" placeholder="Vault One" class="mt-1" />
 			</div>
 			<div>
 				<label class="text-sm font-medium">Vault Folder</label>
-				<Input v-model="form.mountPath" placeholder="path/to/folder" class="mt-1" />
+				<div class="mt-1 border rounded-lg p-4 bg-card">
+					<div v-if="!form.mountPath" class="space-y-3">
+						<div class="flex items-center justify-center">
+							<Button @click="openFolderPicker" :disabled="loading" class="w-full">
+								<FolderSearch class="w-4 h-4 mr-2" />
+								Choose Vault Folder
+							</Button>
+						</div>
+						<div class="flex flex-col items-center space-y-2">
+							<p class="text-xs text-muted-foreground text-center">
+								Empty folder must be created or selected from previous vault
+							</p>
+							<Button variant="outline" size="sm" @click="openGoogleDrive">
+								Open Google Drive
+							</Button>
+						</div>
+					</div>
+					<div v-else class="space-y-3">
+						<div class="flex items-center justify-between">
+							<div class="flex items-center space-x-2">
+								<FolderSearch class="w-4 h-4 text-muted-foreground" />
+								<span class="font-medium">{{ form.mountPath }}</span>
+							</div>
+							<Button variant="ghost" size="sm" @click="openFolderPicker" :disabled="loading">
+								Change
+							</Button>
+						</div>
+						<div class="flex justify-between items-center">
+							<p class="text-xs text-muted-foreground">
+								Empty folder must be created or selected from previous vault
+							</p>
+							<Button variant="outline" size="sm" @click="openGoogleDrive">
+								Open Google Drive
+							</Button>
+						</div>
+					</div>
+				</div>
 			</div>
 			<div>
 				<label class="text-sm font-medium">Encryption Password</label>
@@ -44,7 +80,7 @@
 </template>
 
 <script setup lang="ts">
-import { Trash2 } from "lucide-vue-next";
+import { FolderSearch, Trash2 } from "lucide-vue-next";
 import { computed, ref, watch } from "vue";
 import type { VaultDTO } from "@/domain/entities/Vault";
 import { Button } from "@/presentation/ui/button";
@@ -52,7 +88,6 @@ import {
 	Dialog,
 	DialogContent,
 	DialogDescription,
-	DialogFooter,
 	DialogHeader,
 	DialogTitle,
 } from "@/presentation/ui/dialog";
@@ -68,6 +103,7 @@ interface Emits {
 	(e: "update:open", value: boolean): void;
 	(e: "save", vault: Partial<VaultDTO>): void;
 	(e: "delete", vaultId: string): void;
+	(e: "openFolderPicker", accountId: string): Promise<string[] | null>;
 }
 
 const props = defineProps<Props>();
@@ -135,5 +171,20 @@ const handleDelete = () => {
 	if (props.vault?.id) {
 		emit("delete", props.vault.id);
 	}
+};
+
+const openFolderPicker = async () => {
+	try {
+		const selectedPath = await emit("openFolderPicker", props.vault.accountId);
+		if (selectedPath) {
+			form.value.mountPath = selectedPath.join("/");
+		}
+	} catch (error) {
+		console.error("Failed to open folder picker:", error);
+	}
+};
+
+const openGoogleDrive = () => {
+	window.open('https://drive.google.com', '_blank');
 };
 </script>

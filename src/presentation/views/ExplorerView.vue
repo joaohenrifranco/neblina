@@ -1,25 +1,25 @@
 <script setup lang="ts">
 import {
-  File,
-  Folder,
-  Github,
-  Home,
-  Loader2,
-  Plus,
-  Settings,
-  TriangleAlert,
-  Upload,
+	File,
+	Folder,
+	Github,
+	Home,
+	Loader2,
+	Plus,
+	Settings,
+	TriangleAlert,
+	Upload,
 } from "lucide-vue-next";
 import { ref } from "vue";
 import { useAppController } from "@/presentation/composables/useAppController";
 import { useFileInput } from "@/presentation/composables/useFileInput";
 import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
+	Breadcrumb,
+	BreadcrumbItem,
+	BreadcrumbLink,
+	BreadcrumbList,
+	BreadcrumbPage,
+	BreadcrumbSeparator,
 } from "@/presentation/ui/breadcrumb";
 import { Button } from "@/presentation/ui/button";
 import { Card, CardContent } from "@/presentation/ui/card";
@@ -35,7 +35,7 @@ const controller = useAppController();
 const fileInput = useFileInput(uploadButton, controller.uploadFiles);
 
 const openGitHub = () => {
-  window.open("https://github.com/joaohenrifranco/neblina", "_blank");
+	window.open("https://github.com/joaohenrifranco/neblina", "_blank");
 };
 </script>
 
@@ -270,6 +270,6 @@ const openGitHub = () => {
 
   <VaultSettingsDialog v-if="controller.editingVault.value" :open="!!controller.editingVault.value"
     @update:open="val => val ? null : controller.setEditingVault(null)" @save="controller.saveVault"
-    @delete="controller.deleteVault" :vault="controller.editingVault.value" :loading="controller.isLoading.value" />
+    @delete="controller.deleteVault" @openFolderPicker="controller.openFolderPicker" :vault="controller.editingVault.value" :loading="controller.isLoading.value" />
 </div>
 </template>

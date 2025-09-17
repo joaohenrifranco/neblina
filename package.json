@@ -37,6 +37,7 @@
 		"@types/gapi": "^0.0.47",
 		"@types/gapi.client.drive-v3": "^0.0.4",
 		"@types/google.accounts": "^0.0.14",
+		"@types/google.picker": "^0.0.51",
 		"@types/node": "^20.11.28",
 		"@vitejs/plugin-vue": "^6.0.0",
 		"@vue/tsconfig": "^0.5.1",
