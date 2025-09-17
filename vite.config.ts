@@ -14,7 +14,6 @@ export default defineConfig({
 		extensions: [".ts", ".vue", ".js", ".mjs", ".json"],
 	},
 	server: {
-		headers: {},
 	},
 	optimizeDeps: {
 		exclude: ["@/infrastructure/services/RcloneWasmWorker.ts"],
