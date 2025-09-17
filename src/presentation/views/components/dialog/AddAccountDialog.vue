@@ -11,7 +11,7 @@
       <div class="space-y-4">
         <div>
           <label class="text-sm font-medium">Account Type</label>
-          <select 
+          <select
             v-model="form.type"
             class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
           >
@@ -19,6 +19,12 @@
               {{ provider.name }}
             </option>
           </select>
+        </div>
+
+        <div class="border rounded-lg p-3 bg-muted/30">
+          <p class="text-xs text-muted-foreground">
+            <strong>Note:</strong> Google will show an "unverified app" warning during authentication. This is normal for open source projects and safe to proceed with.
+          </p>
         </div>
       </div>
 

@@ -27,7 +27,7 @@
 							<p class="text-xs text-muted-foreground text-center">
 								Empty folder must be created or selected from previous vault
 							</p>
-							<Button variant="outline" size="sm" @click="() => window.open('https://drive.google.com', '_blank')">
+							<Button variant="outline" size="sm" @click="openGoogleDrive">
 								Open Google Drive
 							</Button>
 						</div>
@@ -46,7 +46,7 @@
 							<p class="text-xs text-muted-foreground">
 								Empty folder must be created or selected from previous vault
 							</p>
-							<Button variant="outline" size="sm" @click="() => window.open('https://drive.google.com', '_blank')">
+							<Button variant="outline" size="sm" @click="openGoogleDrive">
 								Open Google Drive
 							</Button>
 						</div>
@@ -182,5 +182,9 @@ const openFolderPicker = async () => {
 	} catch (error) {
 		console.error("Failed to open folder picker:", error);
 	}
+};
+
+const openGoogleDrive = () => {
+	window.open('https://drive.google.com', '_blank');
 };
 </script>
