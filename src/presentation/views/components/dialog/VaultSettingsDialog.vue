@@ -11,25 +11,46 @@
 		<div class="space-y-4">
 			<div>
 				<label class="text-sm font-medium">Vault Name</label>
-				<Input v-model="form.name" placeholder="my-encrypted-vault" class="mt-1" />
+				<Input v-model="form.name" placeholder="Vault One" class="mt-1" />
 			</div>
 			<div>
 				<label class="text-sm font-medium">Vault Folder</label>
-				<div class="mt-1 flex items-center space-x-2">
-					<Input
-						v-model="form.mountPath"
-						placeholder="path/to/folder"
-						readonly
-						class="flex-1 bg-muted/50"
-					/>
-					<Button
-						variant="outline"
-						size="sm"
-						@click="openFolderPicker"
-						:disabled="loading"
-					>
-						<FolderSearch class="w-4 h-4" />
-					</Button>
+				<div class="mt-1 border rounded-lg p-4 bg-card">
+					<div v-if="!form.mountPath" class="space-y-3">
+						<div class="flex items-center justify-center">
+							<Button @click="openFolderPicker" :disabled="loading" class="w-full">
+								<FolderSearch class="w-4 h-4 mr-2" />
+								Choose Vault Folder
+							</Button>
+						</div>
+						<div class="flex flex-col items-center space-y-2">
+							<p class="text-xs text-muted-foreground text-center">
+								Empty folder must be created or selected from previous vault
+							</p>
+							<Button variant="outline" size="sm" @click="() => window.open('https://drive.google.com', '_blank')">
+								Open Google Drive
+							</Button>
+						</div>
+					</div>
+					<div v-else class="space-y-3">
+						<div class="flex items-center justify-between">
+							<div class="flex items-center space-x-2">
+								<FolderSearch class="w-4 h-4 text-muted-foreground" />
+								<span class="font-medium">{{ form.mountPath }}</span>
+							</div>
+							<Button variant="ghost" size="sm" @click="openFolderPicker" :disabled="loading">
+								Change
+							</Button>
+						</div>
+						<div class="flex justify-between items-center">
+							<p class="text-xs text-muted-foreground">
+								Empty folder must be created or selected from previous vault
+							</p>
+							<Button variant="outline" size="sm" @click="() => window.open('https://drive.google.com', '_blank')">
+								Open Google Drive
+							</Button>
+						</div>
+					</div>
 				</div>
 			</div>
 			<div>
@@ -67,7 +88,6 @@ import {
 	Dialog,
 	DialogContent,
 	DialogDescription,
-	DialogFooter,
 	DialogHeader,
 	DialogTitle,
 } from "@/presentation/ui/dialog";
