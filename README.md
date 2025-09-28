@@ -33,6 +33,57 @@ No setup required! Uses our public Google Cloud app for OAuth authentication. Yo
 
 ### Option 2: Self-Hosting
 
+#### Prerequisites
+
+- **Node.js** (v20 or higher)
+- **Go** (v1.21 or higher)
+- **npm** or **yarn**
+
+#### Quick Setup
+
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/your-username/neblina.git
+   cd neblina
+   ```
+
+2. **Install dependencies**:
+   ```bash
+   npm install
+   ```
+
+3. **Build the application**:
+   ```bash
+   npm run build
+   ```
+
+4. **Serve the built files**:
+   ```bash
+   npm run preview
+   # or use any static file server
+   npx serve dist/
+   ```
+
+#### Google OAuth Setup (Required)
+
+To enable Google Drive integration, you need to create your own Google Cloud project:
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select existing one
+3. Enable the **Google Drive API**
+4. Go to **Credentials** → **Create Credentials** → **OAuth 2.0 Client IDs**
+5. Set **Application type** to "Web application"
+6. Add your domain to **Authorized JavaScript origins** (e.g., `https://yourdomain.com`)
+7. Update the Google Client ID in your deployment
+
+#### Deployment Options
+
+**Static Hosting** (Recommended):
+- Deploy the `dist/` folder to any static hosting service
+- Examples: Netlify, Vercel, GitHub Pages, CloudFlare Pages
+
+**Docker** (see below for Docker setup)
+
 
 ## 📖 Usage
 > ⚠️ **Important**: Google will show an "unverified app" warning because Neblina is an open source project without resources for verification process. This is normal and safe to proceed with.
@@ -80,6 +131,54 @@ sequenceDiagram
    W-->>U: Provide decrypted file
 ```
 
+## 🛠️ Development
+
+### Local Development Setup
+
+1. **Clone and install**:
+   ```bash
+   git clone https://github.com/your-username/neblina.git
+   cd neblina
+   npm install
+   ```
+
+2. **Start development server**:
+   ```bash
+   npm run dev
+   ```
+   Opens at `http://localhost:3001`
+
+### Build Process
+
+Neblina consists of two main components:
+
+1. **Go WebAssembly module** (rclone crypt functionality)
+2. **Vue.js frontend** (web interface)
+
+#### Manual Build Steps
+
+```bash
+# Build Go WASM module
+npm run build:go
+
+# Build Vue.js frontend
+npm run build:vue
+
+# Or build everything
+npm run build
+```
+
+### Docker Development
+
+```bash
+# Build and run with Docker
+docker build -t neblina .
+docker run -p 3000:80 neblina
+
+# Or use docker-compose
+docker-compose up --build
+```
+
 ## 🗺️ Roadmap
 
 - [ ] Support for rclone's password2 (custom salt)
@@ -97,3 +196,7 @@ sequenceDiagram
 
 - [rclone Crypt Documentation](https://rclone.org/crypt/) - Underlying encryption implementation
 - [WebAssembly Security](https://webassembly.org/docs/security/) - WASM security model
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

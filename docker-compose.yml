@@ -1,0 +1,44 @@
+services:
+  neblina:
+    build: .
+    ports:
+      - "3000:80"
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # Optional: Add reverse proxy with SSL
+  # Uncomment if you want automatic HTTPS with Let's Encrypt
+  # nginx-proxy:
+  #   image: nginxproxy/nginx-proxy
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   volumes:
+  #     - /var/run/docker.sock:/tmp/docker.sock:ro
+  #     - nginx-certs:/etc/nginx/certs
+  #     - nginx-vhost:/etc/nginx/vhost.d
+  #     - nginx-html:/usr/share/nginx/html
+  #   restart: unless-stopped
+
+  # letsencrypt:
+  #   image: nginxproxy/acme-companion
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock:ro
+  #     - nginx-certs:/etc/nginx/certs
+  #     - nginx-vhost:/etc/nginx/vhost.d
+  #     - nginx-html:/usr/share/nginx/html
+  #   environment:
+  #     - DEFAULT_EMAIL=your-email@example.com
+  #   restart: unless-stopped
+
+# volumes:
+#   nginx-certs:
+#   nginx-vhost:
+#   nginx-html:
