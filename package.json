@@ -2,6 +2,7 @@
 	"name": "neblina",
 	"version": "0.0.0",
 	"private": true,
+	"license": "MIT",
 	"type": "module",
 	"scripts": {
 		"dev": "vite --port 3001",
