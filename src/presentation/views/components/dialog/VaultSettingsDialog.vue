@@ -1,6 +1,6 @@
 <template>
 <Dialog :open="open" @update:open="$emit('update:open', $event)">
-	<DialogContent>
+	<DialogContent @interactOutside="isPickerOpen && $event.preventDefault()">
 		<DialogHeader>
 			<DialogTitle>{{ vault?.id ? 'Edit Vault' : 'Create New Vault' }}</DialogTitle>
 			<DialogDescription>
@@ -109,6 +109,8 @@ interface Emits {
 const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
 
+const isPickerOpen = ref(false);
+
 const form = ref({
 	name: "",
 	mountPath: "",
@@ -175,12 +177,15 @@ const handleDelete = () => {
 
 const openFolderPicker = async () => {
 	try {
+		isPickerOpen.value = true;
 		const selectedPath = await emit("openFolderPicker", props.vault.accountId);
 		if (selectedPath) {
 			form.value.mountPath = selectedPath.join("/");
 		}
 	} catch (error) {
 		console.error("Failed to open folder picker:", error);
+	} finally {
+		isPickerOpen.value = false;
 	}
 };
 
